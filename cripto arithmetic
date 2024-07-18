@@ -1,0 +1,41 @@
+from itertools import permutations
+
+# Function to check if the solution is valid
+def is_valid_solution(solution, letters):
+    s = "".join(str(solution[letter]) for letter in letters[0])
+    m = "".join(str(solution[letter]) for letter in letters[1])
+    sum_ = "".join(str(solution[letter]) for letter in letters[2])
+    return int(s) + int(m) == int(sum_)
+
+# Function to solve the puzzle
+def solve_cryptarithmetic():
+    # Letters in the puzzle
+    letters = ["SEND", "MORE", "MONEY"]
+    unique_letters = set("".join(letters))
+
+    # Check if the number of unique letters is greater than 10
+    if len(unique_letters) > 10:
+        print("There are more than 10 unique letters.")
+        return None
+
+    # Try all possible permutations of digits 0-9 for the letters
+    for perm in permutations(range(10), len(unique_letters)):
+        solution = dict(zip(unique_letters, perm))
+
+        # Ensure that the first letter of any number is not zero
+        if solution['S'] == 0 or solution['M'] == 0:
+            continue
+
+        if is_valid_solution(solution, letters):
+            return solution
+
+    return None
+
+# Main execution
+solution = solve_cryptarithmetic()
+if solution:
+    print("Solution found:")
+    for letter, digit in solution.items():
+        print(f"{letter} = {digit}")
+else:
+    print("No solution found.")
