@@ -1,0 +1,65 @@
+import heapq
+
+class Puzzle:
+    def __init__(self, board, parent=None, move='', cost=0, depth=0):
+        self.board = board
+        self.parent = parent
+        self.move = move
+        self.cost = cost
+        self.depth = depth
+
+    def __lt__(self, other):
+        return (self.cost + self.depth) < (other.cost + other.depth)
+
+def heuristic(board, goal):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] != 0:
+                goal_x, goal_y = divmod(goal.index(board[i][j]), 3)
+                distance += abs(goal_x - i) + abs(goal_y - j)
+    return distance
+
+def get_neighbors(board):
+    neighbors = []
+    x, y = next((i, j) for i, row in enumerate(board) for j, val in enumerate(row) if val == 0)
+    moves = {'Up': (x - 1, y), 'Down': (x + 1, y), 'Left': (x, y - 1), 'Right': (x, y + 1)}
+    for move, (nx, ny) in moves.items():
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            new_board = [row[:] for row in board]
+            new_board[x][y], new_board[nx][ny] = new_board[nx][ny], new_board[x][y]
+            neighbors.append((new_board, move))
+    return neighbors
+
+def solve_puzzle(start, goal):
+    start_board = [val for row in start for val in row]
+    goal_board = [val for row in goal for val in row]
+
+    open_list = []
+    heapq.heappush(open_list, Puzzle(start, cost=heuristic(start, goal_board)))
+    closed_set = set()
+
+    while open_list:
+        current_puzzle = heapq.heappop(open_list)
+        current_board = current_puzzle.board
+        current_board_tuple = tuple(tuple(row) for row in current_board)
+
+        if current_board == goal:
+            moves = []
+            while current_puzzle.parent:
+                moves.append(current_puzzle.move)
+                current_puzzle = current_puzzle.parent
+            return moves[::-1]
+
+        if current_board_tuple in closed_set:
+            continue
+
+        closed_set.add(current_board_tuple)
+        for neighbor, move in get_neighbors(current_board):
+            neighbor_tuple = tuple(tuple(row) for row in neighbor)
+            if neighbor_tuple not in closed_set:
+                cost = heuristic(neighbor, goal_board)
+                heapq.heappush(open_list, Puzzle(neighbor, current_puzzle, move, cost, current_puzzle.depth + 1))
+
+    return None
+
